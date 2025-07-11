@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <!-- Leaflet map     -->
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+      <!-- Leaflet Routing Machine CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+
+</head>
+<body>
+
+    <div id="map" style="height: 400px; width: 800px;"></div>
+
+    
+
+
+
+    <!-- Leaflet JS -->
+ <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+       <!-- Leaflet Routing Machine JS -->
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+
+     <script>
+
+        var map = L.map('map').setView([19.125, 72.845], 13);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+     let currentLocation = null;
+    let routingControl = null;
+
+    // Get user's current location
+    navigator.geolocation.getCurrentPosition(function(position) {
+      currentLocation = L.latLng(position.coords.latitude, position.coords.longitude);
+      L.marker(currentLocation).addTo(map).bindPopup("You are here").openPopup();
+      map.setView(currentLocation, 14);
+    }, function(err) {
+      alert("Location access denied or unavailable.");
+    });
+
+    // Add geocoder search box
+    const geocoder = L.Control.geocoder({
+      defaultMarkGeocode: false
+    })
+    .on('markgeocode', function(e) {
+      const dest = e.geocode.center;
+
+      L.marker(dest).addTo(map).bindPopup("Destination").openPopup();
+      map.setView(dest, 14);
+
+      if (!currentLocation) {
+        alert("Waiting for current location or permission denied.");
+        return;
+      }
+
+      // Draw route
+      if (routingControl) map.removeControl(routingControl);
+      routingControl = L.Routing.control({
+        waypoints: [currentLocation, dest],
+        routeWhileDragging: false
+      }).addTo(map);
+    })
+    .addTo(map);
+     </script>
+</body>
+</html>
