@@ -3,171 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cashfree Payment</title>
+    <title>Cashfree Redirect Checkout</title>
     <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
   </head>
   <body>
-    <div
-      id="cardLayout"
-      style="width: 400px; padding: 20px; background: #f6f9fb"
-    >
-      <div id="cardNumber" style="margin-bottom: 10px"></div>
-      <div id="cardHolder" style="margin-bottom: 10px"></div>
-      <div style="display: flex; margin-bottom: 10px">
-        <div id="cardExpiry" style="margin-right: 1rem"></div>
-        <div id="cardCvv"></div>
-      </div>
-      <div id="save" style="margin-bottom: 10px"></div>
-      <button
-        type="submit"
-        id="payNow"
-        style="
-          width: 100%;
-          height: 35px;
-          cursor: pointer;
-          border: 1px solid #2361d5;
-          color: #2361d5;
-          background: none;
-          border-radius: 8px;
-        "
-        disabled
-      >
-        Pay Now
-      </button>
-      <p id="paymentMessage" style="color: #df1b41"></p>
-    </div>
+    <h1>Pay with Cashfree</h1>
+    <button id="payNow">Pay Now</button>
 
     <script>
-      let paymentSessionId = null;
+      const cashfree = Cashfree({ mode: "sandbox" });
 
-      // Step 1: Fetch the session ID from your backend
-      fetch("http://localhost:3000/create-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          paymentSessionId = data.sessionId;
-          console.log("Received session ID:", paymentSessionId);
-          toggleBtn(); // Enable Pay button if form is filled
-        })
-        .catch((err) => {
-          console.error("Failed to get payment session:", err);
-          document.getElementById("paymentMessage").innerHTML =
-            "Error fetching session. Try again.";
-        });
-
-      const cashfree = Cashfree({
-        mode: "sandbox", // use "production" for live
-      });
-
-      let paymentBtn = document.getElementById("payNow");
-      let paymentMessage = document.getElementById("paymentMessage");
-
-      let styleObject = {
-        fonts: [
-          {
-            cssSrc: "https://fonts.googleapis.com/css2?family=Lato",
-          },
-        ],
-        base: {
-          fontSize: "16px",
-          fontFamily: "Lato",
-          backgroundColor: "#FFFFFF",
-          ":focus": {
-            border: "1px solid #2361d5",
-          },
-          border: "1px solid #e6e6e6",
-          borderRadius: "5px",
-          padding: "16px",
-          color: "#000000",
-        },
-        invalid: {
-          color: "#df1b41",
-        },
-      };
-
-      let cardComponent = cashfree.create("cardNumber", {
-        values: { placeholder: "Enter Card Number" },
-        style: styleObject,
-      });
-      cardComponent.mount("#cardNumber");
-
-      let cvvComponent = cashfree.create("cardCvv", {
-        style: styleObject,
-      });
-      cvvComponent.mount("#cardCvv");
-
-      let cardHolder = cashfree.create("cardHolder", {
-        values: { placeholder: "Enter Card Holder Name" },
-        style: styleObject,
-      });
-      cardHolder.mount("#cardHolder");
-
-      let cardExpiry = cashfree.create("cardExpiry", {
-        style: styleObject,
-      });
-      cardExpiry.mount("#cardExpiry");
-
-      let save = cashfree.create("savePaymentInstrument", {
-        values: { label: "Save Card for later" },
-        style: styleObject,
-      });
-      save.mount("#save");
-
-      function toggleBtn() {
-        if (
-          cardExpiry.isComplete() &&
-          cardHolder.isComplete() &&
-          cardComponent.isComplete() &&
-          cvvComponent.isComplete() &&
-          paymentSessionId
-        ) {
-          paymentBtn.disabled = false;
-        } else {
-          paymentBtn.disabled = true;
-        }
-      }
-
-      cardExpiry.on("change", toggleBtn);
-      cardHolder.on("change", toggleBtn);
-      cardComponent.on("change", (data) => {
-        cvvComponent.update({ cvvLength: data.value.cvvLength });
-        toggleBtn();
-      });
-      cvvComponent.on("change", toggleBtn);
-
-      paymentBtn.addEventListener("click", function () {
-        if (!paymentSessionId) {
-          paymentMessage.innerHTML =
-            "Payment session not available. Try refreshing the page.";
-          return;
-        }
-
-        paymentBtn.disabled = true;
-        paymentMessage.innerHTML = "";
-
-        cashfree
-          .pay({
-            paymentMethod: cardComponent,
-            paymentSessionId: paymentSessionId,
-            savePaymentInstrument: save,
-          })
-          .then(function (data) {
-            if (data != null && data.error) {
-              paymentMessage.innerHTML = data.error.message;
-            } else {
-              paymentMessage.innerHTML = "Payment completed successfully!";
-            }
-            paymentBtn.disabled = false;
-          })
-          .catch((err) => {
-            console.error("Payment failed:", err);
-            paymentMessage.innerHTML = "Payment failed. Try again.";
-            paymentBtn.disabled = false;
+      document.getElementById("payNow").addEventListener("click", async () => {
+        try {
+          // 1️⃣ Fetch payment session ID from backend
+          const res = await fetch("http://localhost:3000/create-session", {
+            method: "POST",
           });
+          const data = await res.json();
+
+          if (!data.sessionId) {
+            alert("Failed to create session");
+            return;
+          }
+
+          console.log("✅ Payment session:", data.sessionId);
+
+          // 2️⃣ Redirect checkout
+          cashfree.checkout({
+            paymentSessionId: data.sessionId,
+            redirectTarget: "_self", // open in same page
+          });
+
+        } catch (err) {
+          console.error("❌ Error fetching session:", err);
+          alert("Error creating payment session");
+        }
       });
     </script>
   </body>

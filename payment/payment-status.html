@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Payment Status</title>
+  </head>
+  <body>
+    <h1>Checking Payment Status...</h1>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get("order_id");
+
+      if (!orderId) {
+        document.body.innerHTML = "<h2>Invalid Payment Link</h2>";
+      } else {
+        fetch(`http://localhost:3000/verify-payment/${orderId}`)
+          .then((res) => res.json())
+          .then((order) => {
+            if (order.order_status === "PAID") {
+              document.body.innerHTML = "<h2>✅ Payment Successful!</h2>";
+            } else if (order.order_status === "FAILED") {
+              document.body.innerHTML = "<h2>❌ Payment Failed!</h2>";
+            } else {
+              document.body.innerHTML = "<h2>⏳ Payment Pending...</h2>";
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            document.body.innerHTML =
+              "<h2>❌ Error verifying payment</h2>";
+          });
+      }
+    </script>
+  </body>
+</html>

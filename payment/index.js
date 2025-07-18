@@ -28,7 +28,7 @@ app.post('/create-session', async (req, res) => {
       customer_phone: "9699432854"
     },
     order_meta: {
-      return_url: "http://localhost:5500/success.html?order_id={order_id}",
+      return_url: "http://localhost:5500/payment-status.html?order_id={order_id}",
     }
   };
 
@@ -44,6 +44,26 @@ app.post('/create-session', async (req, res) => {
     res.status(500).json({ error: "Failed to create session" });
   }
 });
+
+app.get('/verify-payment/:orderId', async (req, res) => {
+  const orderId = req.params.orderId;
+
+  const headers = {
+    'x-client-id': process.env.CASHFREE_CLIENT_ID,
+    'x-client-secret': process.env.CASHFREE_CLIENT_SECRET,
+    'x-api-version': '2022-09-01',
+    'Content-Type': 'application/json'
+  };
+
+  try {
+    const response = await axios.get(`https://sandbox.cashfree.com/pg/orders/${orderId}`, { headers });
+    res.json(response.data); // includes order_status
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({ error: "Failed to fetch order status" });
+  }
+});
+
 
 app.listen(3000, () => {
   console.log('Server running on http://localhost:3000');
