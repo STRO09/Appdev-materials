@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FullCalendar with Custom Modal + Start/End Time</title>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.18/index.global.min.js"></script>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+  <div id="calendar"></div>
+
+  <!-- ✅ Custom Modal -->
+  <div id="eventModal" class="modal">
+    <div class="modal-content">
+      <h3 id="modalTitle">Add Event</h3>
+      
+      <!-- Event Title -->
+      <input type="text" id="eventTitle" placeholder="Event Title" />
+
+      <!-- Start DateTime -->
+      <label>Start:</label>
+      <input type="datetime-local" id="startDateTime" />
+
+      <!-- End DateTime -->
+      <label>End:</label>
+      <input type="datetime-local" id="endDateTime" />
+
+      <div>
+        <button id="saveEventBtn">Save</button>
+        <button id="deleteEventBtn" style="display:none;">Delete</button>
+        <button id="cancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+<script src="scripts.js"></script>
+</body>
+</html>
